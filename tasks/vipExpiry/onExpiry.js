@@ -1,4 +1,4 @@
-const pool = require('../../imports/database');
+const pool = require('../../imports/db-notes');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 const PREMIUM_ROLE_ID = process.env.premium_role;

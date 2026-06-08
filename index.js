@@ -42,6 +42,12 @@ function loadCommands(dir) {
                 const command = require(entryPath);
 
                 if (command?.data && typeof command.data.toJSON === 'function' && typeof command.execute === 'function') {
+                    // Skip if already loaded (prevents duplicates from nested folders)
+                    if (client.slashCommands.has(command.data.name)) {
+                        console.log(`[SKIPPED DUPLICATE] ${command.data.name} from ${entryPath}`);
+                        continue;
+                    }
+
                     client.slashCommands.set(command.data.name, command);
 
                     if (command.adminOnly) {
@@ -71,21 +77,23 @@ if (CLIENT_ID && TOKEN) {
 
     (async () => {
         try {
-            const allGuilds = [DEV_GUILD, STAFF_GUILD, PUBLIC_GUILD].filter(Boolean);
-            const staffGuilds = [DEV_GUILD, STAFF_GUILD].filter(Boolean);
+            // Build guild maps — admin guilds get public + admin commands, public guilds get public only
+            // Use Sets to deduplicate guild IDs
+            const adminGuildIds = [...new Set([DEV_GUILD, STAFF_GUILD].filter(Boolean))];
+            const publicGuildIds = [...new Set([PUBLIC_GUILD].filter(Boolean))].filter(id => !adminGuildIds.includes(id));
 
             await Promise.all([
-                ...allGuilds.map(guildId =>
+                ...adminGuildIds.map(guildId =>
+                    rest.put(
+                        Routes.applicationGuildCommands(CLIENT_ID, guildId),
+                        { body: [...publicCommands, ...adminCommands] }
+                    ).then(data => console.log(`✅ Registered ${data.length} commands (public + admin) to guild ${guildId}`))
+                ),
+                ...publicGuildIds.map(guildId =>
                     rest.put(
                         Routes.applicationGuildCommands(CLIENT_ID, guildId),
                         { body: publicCommands }
                     ).then(data => console.log(`✅ Registered ${data.length} public commands to guild ${guildId}`))
-                ),
-                ...staffGuilds.map(guildId =>
-                    rest.put(
-                        Routes.applicationGuildCommands(CLIENT_ID, guildId),
-                        { body: [...publicCommands, ...adminCommands] }
-                    ).then(data => console.log(`✅ Registered ${data.length} admin commands to guild ${guildId}`))
                 )
             ]);
 
