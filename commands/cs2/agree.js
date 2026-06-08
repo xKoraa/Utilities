@@ -19,7 +19,6 @@ module.exports = {
         .setDescription('Agree to the KZG staff terms and register your Steam account'),
 
     async execute(interaction) {
-        // Only works in the onboarding channel
         if (interaction.channelId !== process.env.onboarding_terms) {
             return interaction.reply({
                 content: '❌ This command can only be used in the onboarding channel.',
@@ -27,7 +26,6 @@ module.exports = {
             });
         }
 
-        // Show modal immediately
         const modal = new ModalBuilder()
             .setCustomId(`onboarding_steamid_${interaction.user.id}`)
             .setTitle('KZG Staff Registration');
@@ -59,7 +57,6 @@ module.exports = {
             const rawInput = interaction.fields.getTextInputValue('steamid');
             const member = interaction.member;
 
-            // Resolve Steam ID
             let steamid64;
             try {
                 steamid64 = await resolveSteamId(rawInput);
@@ -71,13 +68,19 @@ module.exports = {
 
             let publicRoleName = 'Unknown Role';
 
-            // Register with API
+            // Register with API — includes Discord profile data for the staff page
             try {
                 await api.post('/api/admins', {
-                    steamid: steamid64,
-                    name: member.displayName,
-                    flags: 'staff',
-                    added_by_steamid: null
+                    steamid:      steamid64,
+                    name:         member.displayName,
+                    flags:        'staff',
+                    added_by_steamid: null,
+                    discord_id:   interaction.user.id,
+                    discord_name: member.displayName,
+                    avatar_url:   interaction.user.displayAvatarURL({ extension: 'png', size: 256 }),
+                    role:         'Staff',
+                    category:     'moderator',
+                    since:        new Date().getFullYear()
                 });
                 console.log(`[Onboarding] Registered ${member.displayName} (${steamid64}) as staff`);
             } catch (err) {
