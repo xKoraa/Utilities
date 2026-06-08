@@ -66,23 +66,40 @@ module.exports = {
                 );
             }
 
+            // Determine role and category dynamically from Discord roles
+            let role = 'Staff';
+            let category = 'moderator';
+            let flags = 'staff';
+
+            if (member.roles.cache.has(process.env.management)) {
+                role = 'Management'; category = 'management'; flags = 'management';
+            } else if (member.roles.cache.has(process.env.manager)) {
+                role = 'Manager'; category = 'management'; flags = 'management';
+            } else if (member.roles.cache.has(process.env.headadmin)) {
+                role = 'Head Admin'; category = 'admin'; flags = 'admin';
+            } else if (member.roles.cache.has(process.env.admin)) {
+                role = 'Admin'; category = 'admin'; flags = 'admin';
+            } else if (member.roles.cache.has(process.env.mod)) {
+                role = 'Moderator'; category = 'moderator'; flags = 'mod';
+            }
+
             let publicRoleName = 'Unknown Role';
 
-            // Register with API — includes Discord profile data for the staff page
+            // Register with API
             try {
                 await api.post('/api/admins', {
-                    steamid:      steamid64,
-                    name:         member.displayName,
-                    flags:        'staff',
+                    steamid,
+                    name:             member.displayName,
+                    flags,
                     added_by_steamid: null,
-                    discord_id:   interaction.user.id,
-                    discord_name: member.displayName,
-                    avatar_url:   interaction.user.displayAvatarURL({ extension: 'png', size: 256 }),
-                    role:         'Staff',
-                    category:     'moderator',
-                    since:        new Date().getFullYear()
+                    discord_id:       interaction.user.id,
+                    discord_name:     member.displayName,
+                    avatar_url:       interaction.user.displayAvatarURL({ extension: 'png', size: 256 }),
+                    role,
+                    category,
+                    since:            new Date().getFullYear()
                 });
-                console.log(`[Onboarding] Registered ${member.displayName} (${steamid64}) as staff`);
+                console.log(`[Onboarding] Registered ${member.displayName} (${steamid64}) as ${role}`);
             } catch (err) {
                 console.error('[Onboarding] Failed to register with API:', err.message);
             }
@@ -108,10 +125,10 @@ module.exports = {
                     });
                     setTimeout(() => warn.delete().catch(() => {}), 10000);
                 } else {
-                    const role = await publicGuild.roles.fetch(process.env.server_staff);
-                    if (!role) throw new Error('Public role not found');
-                    publicRoleName = role.name;
-                    await publicMember.roles.add(role);
+                    const discordRole = await publicGuild.roles.fetch(process.env.server_staff);
+                    if (!discordRole) throw new Error('Public role not found');
+                    publicRoleName = discordRole.name;
+                    await publicMember.roles.add(discordRole);
                 }
             } catch (err) {
                 console.error('[Onboarding] Failed to assign public role:', err.message);
@@ -138,6 +155,7 @@ module.exports = {
                         value:
                             `<@${interaction.user.id}> has agreed to the onboarding terms.\n\n` +
                             `• SteamID: \`${steamid64}\`\n` +
+                            `• Role Detected: ${role}\n` +
                             `• Staff Role: <@&${process.env.agreed}> (Staff Server)\n` +
                             `• Public Role: ${publicRoleName} (ID: ${process.env.server_staff})\n\n` +
                             `Respective <@&${process.env.headadmin}> and/or <@&${process.env.manager}>, please continue onboarding.`
