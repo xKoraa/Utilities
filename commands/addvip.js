@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { DateTime } = require('luxon');
-const pool = require('../imports/database');
+const pool = require('../imports/db-notes');
 
 const SUPPORT_ROLE_ID = process.env.support_role;
 const PREMIUM_ROLE_ID = process.env.premium_role;
