@@ -1,4 +1,4 @@
-const pool = require('../../imports/db-notes');
+const pool = require('../../imports/database');
 
 const PREMIUM_ROLE_ID = process.env.premium_role;
 
