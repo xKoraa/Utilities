@@ -40,7 +40,7 @@ module.exports = {
                 },
                 {
                     name: '**Agreement**',
-                    value: `> Once you understand and accept these terms, type \`.agree\` in this channel to receive your staff role.`+
+                    value: `> Once you understand and accept these terms, type \`/agree\` in this channel to receive your staff role.`+
                     `\n\n If you have any questions or queries, please get in contact with your onboarding staff member, typically <@&${process.env.headadmin}> or <@&${process.env.manager}>`
                 }
             )
