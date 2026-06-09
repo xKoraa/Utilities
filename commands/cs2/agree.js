@@ -88,7 +88,7 @@ module.exports = {
             // Register with API
             try {
                 await api.post('/api/admins', {
-                    steamid,
+                    steamid: steamid64,
                     name:             member.displayName,
                     flags,
                     added_by_steamid: null,
