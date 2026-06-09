@@ -2,6 +2,7 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const { Client, Collection, GatewayIntentBits, REST, Routes, Events } = require('discord.js');
+const syncRoles = require('./imports/syncRoles');
 
 const TOKEN = process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -42,7 +43,6 @@ function loadCommands(dir) {
                 const command = require(entryPath);
 
                 if (command?.data && typeof command.data.toJSON === 'function' && typeof command.execute === 'function') {
-                    // Skip if already loaded (prevents duplicates from nested folders)
                     if (client.slashCommands.has(command.data.name)) {
                         console.log(`[SKIPPED DUPLICATE] ${command.data.name} from ${entryPath}`);
                         continue;
@@ -77,8 +77,6 @@ if (CLIENT_ID && TOKEN) {
 
     (async () => {
         try {
-            // Build guild maps — admin guilds get public + admin commands, public guilds get public only
-            // Use Sets to deduplicate guild IDs
             const adminGuildIds = [...new Set([DEV_GUILD, STAFF_GUILD].filter(Boolean))];
             const publicGuildIds = [...new Set([PUBLIC_GUILD].filter(Boolean))].filter(id => !adminGuildIds.includes(id));
 
@@ -171,10 +169,9 @@ function loadTasks(tasksDir = path.join(__dirname, 'tasks')) {
 loadTasks();
 
 // --------------------- Ready ---------------------
-client.once('ready', async () => {
+client.once('clientReady', async () => {
     console.log(`Logged in as ${client.user.tag}`);
 
-    // Register modal handlers for all commands that have them
     for (const command of client.slashCommands.values()) {
         if (typeof command.registerModalHandler === 'function') {
             command.registerModalHandler(client);
@@ -190,5 +187,8 @@ client.once('ready', async () => {
 
 // --------------------- Start Bot Listener ---------------------
 require('./server')(client);
+
+// --------------------- Init Role Sync ---------------------
+syncRoles.init(client);
 
 client.login(TOKEN);
