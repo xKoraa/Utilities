@@ -28,4 +28,13 @@ const del = async (path) => {
     return response.json();
 };
 
-module.exports = { get, post, del };
+const patch = async (path, body) => {
+    const response = await fetch(`${API_URL}${path}`, {
+        method: 'PATCH',
+        headers: { 'x-api-key': API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    if (!response.ok) throw new Error(`${response.status}`);
+    return response.json();
+};
+module.exports = { get, post, del, patch };

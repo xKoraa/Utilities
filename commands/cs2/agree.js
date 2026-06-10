@@ -93,7 +93,7 @@ module.exports = {
                     flags,
                     added_by_steamid: null,
                     discord_id:       interaction.user.id,
-                    discord_name:     member.displayName,
+                    discord_name:     interaction.member.displayName,
                     avatar_url:       interaction.user.displayAvatarURL({ extension: 'png', size: 256 }),
                     role,
                     category,

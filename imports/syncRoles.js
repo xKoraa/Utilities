@@ -91,7 +91,7 @@ function init(client) {
     });
 
     client.once('clientReady', () => {
-        const guild = client.guilds.cache.get(process.env.GUILD_ID);
+        const guild = client.guilds.cache.get(process.env.staff_guild);
         if (!guild) {
             console.warn('[syncRoles] Guild not found — check GUILD_ID in .env');
             return;
