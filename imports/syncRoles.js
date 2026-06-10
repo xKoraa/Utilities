@@ -2,11 +2,12 @@ const api = require('./api');
 
 // Staff roles ordered by seniority — lower priority number wins display
 const ROLE_MAP = {
-    [process.env.ROLE_MANAGEMENT]: { category: 'management', priority: 0 },
-    [process.env.ROLE_MANAGER]:    { category: 'management', priority: 1 },
-    [process.env.ROLE_HEADADMIN]:  { category: 'admin',      priority: 2 },
-    [process.env.ROLE_ADMIN]:      { category: 'admin',      priority: 3 },
-    [process.env.ROLE_MOD]:        { category: 'moderator',  priority: 4 },
+    [process.env.management]: { category: 'management', priority: 0 },
+    [process.env.manager]:    { category: 'management', priority: 1 },
+    [process.env.headadmin]:  { category: 'admin',      priority: 2 },
+    [process.env.admin]:      { category: 'admin',      priority: 3 },
+    [process.env.mod]:        { category: 'moderator',  priority: 4 },
+    [process.env.trialmod]:   { category: 'moderator',  priority: 5 },
 };
 
 // Dynamic group map — loaded from ROLE_GROUPS env var
@@ -45,7 +46,6 @@ async function syncMember(member) {
         .filter(r => GROUP_ROLE_IDS.has(r.id))
         .map(r => GROUP_MAP[r.id]);
 
-    // Use first match or null
     const server_group = memberGroupRoles.length > 0 ? memberGroupRoles[0] : null;
 
     await api.patch(`/api/admins/discord/${member.id}`, {
@@ -67,9 +67,14 @@ async function syncAll(guild) {
     );
 
     const results = await Promise.allSettled(staffMembers.map(m => syncMember(m)));
-    const failed  = results.filter(r => r.status === 'rejected').length;
+    const failed  = results.filter(r => r.status === 'rejected');
 
-    console.log(`[syncRoles] Synced ${staffMembers.size} staff${failed ? ` — ${failed} failed` : ''}`);
+    if (failed.length > 0) {
+        console.error(`[syncRoles] ${failed.length} failures:`);
+        failed.forEach(r => console.error(' -', r.reason?.message || r.reason));
+    }
+
+    console.log(`[syncRoles] Synced ${staffMembers.size} staff${failed.length ? ` — ${failed.length} failed` : ''}`);
 }
 
 function init(client) {
@@ -93,7 +98,7 @@ function init(client) {
     client.once('clientReady', () => {
         const guild = client.guilds.cache.get(process.env.staff_guild);
         if (!guild) {
-            console.warn('[syncRoles] Guild not found — check GUILD_ID in .env');
+            console.warn('[syncRoles] Guild not found — check staff_guild in .env');
             return;
         }
 
