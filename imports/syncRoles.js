@@ -48,15 +48,25 @@ async function syncMember(member) {
 
     const server_group = memberGroupRoles.length > 0 ? memberGroupRoles[0] : null;
 
-    await api.patch(`/api/admins/discord/${member.id}`, {
-        discord_name: member.user.username,
+    // Get join year from Discord server join date
+    const since = member.joinedAt ? member.joinedAt.getFullYear() : new Date().getFullYear();
+
+    const payload = {
+        discord_name: member.displayName,
         avatar_url:   member.user.displayAvatarURL({ extension: 'png', size: 256 }),
         role:         topRole.name,
         category,
         color,
-        server_group,
+        since,
         active:       1,
-    });
+    };
+
+    // Only update server_group if we found one — don't overwrite with null
+    if (server_group !== null) {
+        payload.server_group = server_group;
+    }
+
+    await api.patch(`/api/admins/discord/${member.id}`, payload);
 }
 
 async function syncAll(guild) {
