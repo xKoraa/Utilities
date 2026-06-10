@@ -3,7 +3,7 @@ const api = require('./api');
 // Staff roles ordered by seniority — lower priority number wins display
 const ROLE_MAP = {
     [process.env.management]: { category: 'management', priority: 0 },
-    [process.env.manager]:    { category: 'management', priority: 1 },
+    [process.env.manager]:    { category: 'manager',    priority: 1 },
     [process.env.headadmin]:  { category: 'admin',      priority: 2 },
     [process.env.admin]:      { category: 'admin',      priority: 3 },
     [process.env.mod]:        { category: 'moderator',  priority: 4 },
